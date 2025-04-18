@@ -20,14 +20,15 @@ import java.util.Objects;
 public class ScoringServiceImpl implements ScoringService {
 
     private final RuleLoadingService ruleLoadingService;
+    private static final int BASE_SCORE = 500; // Define a base score
 
     @Override
     public ScoringResult evaluate(LoanApplication application, Customer customer) {
         List<ScoringRule> activeRules = ruleLoadingService.getActiveRules();
-        int riskScore = 0;
+        int riskScore = BASE_SCORE; // Initialize with base score
         List<String> explanation = new ArrayList<>();
 
-        log.info("Starting scoring evaluation for application ID: {} and customer ID: {}", application.getId(), customer.getId());
+        log.info("Starting scoring evaluation for application ID: {} and customer ID: {}. Base score: {}", application.getId(), customer.getId(), BASE_SCORE);
         log.debug("Found {} active rules.", activeRules.size());
 
         for (ScoringRule rule : activeRules) {
@@ -182,18 +183,22 @@ public class ScoringServiceImpl implements ScoringService {
         }
     }
 
+    // Adjusted thresholds based on BASE_SCORE = 500
     private String determineRiskLevel(int riskScore) {
-        if (riskScore <= 30) return "Low";
-        if (riskScore <= 60) return "Medium";
-        return "High"; // Scores > 60
+        if (riskScore < 450) return "High";    // Example: Score below 450 is High risk
+        if (riskScore < 650) return "Medium";  // Example: Score between 450 and 649 is Medium risk
+        return "Low";                          // Example: Score 650 and above is Low risk
     }
 
+    // Decision logic might need adjustment based on risk levels
     private String determineDecision(String riskLevel) {
         switch (riskLevel) {
-            case "Low":    return "approve";
-            case "Medium": return "manual_review";
-            case "High":   return "reject";
-            default:       return "error"; // Should not happen
+            case "Low":    return "APPROVED"; // Consistent casing with tests
+            case "Medium": return "MANUAL_REVIEW"; // Consistent casing
+            case "High":   return "DECLINED"; // Consistent casing (or REJECTED)
+            default:
+                log.error("Unknown risk level encountered: {}", riskLevel);
+                return "ERROR"; // Should not happen
         }
     }
 }
