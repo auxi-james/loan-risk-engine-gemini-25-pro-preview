@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate; // Added import for LocalDate
+import java.math.BigDecimal; // Using BigDecimal for precision as discussed
 
 @Entity
 @Data // Lombok will generate getters, setters, toString, equals, hashCode
@@ -20,9 +20,11 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String firstName;
-    private String lastName;
-    private String email;
-    private LocalDate dateOfBirth; // Changed fields to match test
+    private String name;
+    private Integer age;
+    private BigDecimal annualIncome; // Reverted field, using BigDecimal
+    private Integer creditScore;
+    private String employmentStatus; // Reverted field (String for simplicity, requirements mention enum)
+    private BigDecimal existingDebt; // Reverted field, using BigDecimal
 
 }

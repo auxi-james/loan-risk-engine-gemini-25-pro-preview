@@ -9,8 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalDateTime; // Removed unused LocalDate import
 import java.util.List;
 import java.util.Optional;
 
@@ -25,31 +24,42 @@ public class LoanApplicationRepositoryTest {
     @Autowired
     private LoanApplicationRepository loanApplicationRepository;
 
-    @Autowired
-    private CustomerRepository customerRepository; // Needed to create a customer first
+    // CustomerRepository is not strictly needed here as we use TestEntityManager
+    // @Autowired
+    // private CustomerRepository customerRepository;
 
     private Customer testCustomer;
 
+    // Helper to create customer with correct fields
+    private Customer createTestCustomer(String name, int age, String income, int score, String status, String debt) {
+        Customer customer = new Customer();
+        customer.setName(name);
+        customer.setAge(age);
+        customer.setAnnualIncome(new BigDecimal(income));
+        customer.setCreditScore(score);
+        customer.setEmploymentStatus(status);
+        customer.setExistingDebt(new BigDecimal(debt));
+        return customer;
+    }
+
+
     @BeforeEach
     void setUp() {
-        // Create and persist a customer before each test
-        Customer customer = new Customer();
-        customer.setFirstName("Test");
-        customer.setLastName("User");
-        customer.setEmail("test.user@example.com");
-        customer.setDateOfBirth(LocalDate.of(1995, 6, 20));
-        testCustomer = entityManager.persistFlushFind(customer);
+        // Create and persist a customer before each test using the helper
+        testCustomer = createTestCustomer("Test User Repo", 45, "110000.00", 780, "Employed", "5000.00");
+        testCustomer = entityManager.persistFlushFind(testCustomer);
+        assertThat(testCustomer.getId()).isNotNull(); // Ensure customer persisted
     }
 
     @Test
     public void whenSaveLoanApplication_thenFindById() {
         LoanApplication loanApp = new LoanApplication();
         loanApp.setCustomer(testCustomer);
-        loanApp.setLoanAmount(new BigDecimal("10000.00")); // Corrected field name
-        loanApp.setLoanPurpose("Home Improvement"); // Corrected field name
-        loanApp.setDecision("PENDING"); // Corrected field name (assuming status maps to decision)
-        // createdAt is set automatically by @CreationTimestamp, no need to set manually
-        // loanApp.setCreatedAt(LocalDateTime.now());
+        loanApp.setLoanAmount(new BigDecimal("10000.00"));
+        loanApp.setLoanPurpose("Home Improvement");
+        loanApp.setDecision("PENDING");
+        loanApp.setRequestedTermMonths(24); // Added missing required field for LoanApplication constructor
+        // createdAt is set automatically
 
         LoanApplication savedLoanApp = loanApplicationRepository.save(loanApp);
         entityManager.flush();
@@ -58,37 +68,34 @@ public class LoanApplicationRepositoryTest {
 
         assertThat(foundLoanAppOpt).isPresent();
         assertThat(foundLoanAppOpt.get().getCustomer().getId()).isEqualTo(testCustomer.getId());
-        assertThat(foundLoanAppOpt.get().getLoanAmount()).isEqualByComparingTo(new BigDecimal("10000.00")); // Corrected field name
-        assertThat(foundLoanAppOpt.get().getDecision()).isEqualTo("PENDING"); // Corrected field name
+        assertThat(foundLoanAppOpt.get().getLoanAmount()).isEqualByComparingTo(new BigDecimal("10000.00"));
+        assertThat(foundLoanAppOpt.get().getDecision()).isEqualTo("PENDING");
+        assertThat(foundLoanAppOpt.get().getRequestedTermMonths()).isEqualTo(24);
     }
 
     @Test
     public void whenFindAll_thenReturnLoanApplicationList() {
         LoanApplication loanApp1 = new LoanApplication();
         loanApp1.setCustomer(testCustomer);
-        loanApp1.setLoanAmount(new BigDecimal("5000.00")); // Corrected field name
-        loanApp1.setLoanPurpose("Car Purchase"); // Corrected field name
-        loanApp1.setDecision("APPROVED"); // Corrected field name
+        loanApp1.setLoanAmount(new BigDecimal("5000.00"));
+        loanApp1.setLoanPurpose("Car Purchase");
+        loanApp1.setDecision("APPROVED");
+        loanApp1.setRequestedTermMonths(12); // Added missing required field
         // createdAt is set automatically
-        // loanApp1.setCreatedAt(LocalDateTime.now().minusDays(1));
         entityManager.persist(loanApp1);
 
-        // Create another customer for the second loan
-        Customer customer2 = new Customer();
-        customer2.setFirstName("Another");
-        customer2.setLastName("Tester");
-        customer2.setEmail("another.tester@example.com");
-        customer2.setDateOfBirth(LocalDate.of(1980, 1, 1));
+        // Create another customer for the second loan using the helper
+        Customer customer2 = createTestCustomer("Another Tester Repo", 30, "60000.00", 650, "Self-employed", "15000.00");
         Customer savedCustomer2 = entityManager.persistFlushFind(customer2);
 
 
         LoanApplication loanApp2 = new LoanApplication();
         loanApp2.setCustomer(savedCustomer2);
-        loanApp2.setLoanAmount(new BigDecimal("20000.00")); // Corrected field name
-        loanApp2.setLoanPurpose("Business Startup"); // Corrected field name
-        loanApp2.setDecision("REJECTED"); // Corrected field name
+        loanApp2.setLoanAmount(new BigDecimal("20000.00"));
+        loanApp2.setLoanPurpose("Business Startup");
+        loanApp2.setDecision("REJECTED");
+        loanApp2.setRequestedTermMonths(60); // Added missing required field
         // createdAt is set automatically
-        // loanApp2.setCreatedAt(LocalDateTime.now());
         entityManager.persist(loanApp2);
 
         entityManager.flush();
@@ -96,7 +103,7 @@ public class LoanApplicationRepositoryTest {
         List<LoanApplication> loanApps = loanApplicationRepository.findAll();
 
         assertThat(loanApps).hasSize(2);
-        assertThat(loanApps).extracting(LoanApplication::getLoanPurpose) // Corrected field name
+        assertThat(loanApps).extracting(LoanApplication::getLoanPurpose)
                 .containsExactlyInAnyOrder("Car Purchase", "Business Startup");
     }
 
@@ -104,11 +111,11 @@ public class LoanApplicationRepositoryTest {
     public void whenDeleteLoanApplication_thenNotFound() {
         LoanApplication loanApp = new LoanApplication();
         loanApp.setCustomer(testCustomer);
-        loanApp.setLoanAmount(new BigDecimal("1500.00")); // Corrected field name
-        loanApp.setLoanPurpose("Vacation"); // Corrected field name
-        loanApp.setDecision("PENDING"); // Corrected field name
+        loanApp.setLoanAmount(new BigDecimal("1500.00"));
+        loanApp.setLoanPurpose("Vacation");
+        loanApp.setDecision("PENDING");
+        loanApp.setRequestedTermMonths(6); // Added missing required field
         // createdAt is set automatically
-        // loanApp.setCreatedAt(LocalDateTime.now());
         LoanApplication savedLoanApp = entityManager.persistFlushFind(loanApp);
 
         loanApplicationRepository.deleteById(savedLoanApp.getId());

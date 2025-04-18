@@ -7,8 +7,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.math.BigDecimal;
-import java.time.LocalDate; // Added import
-import java.time.LocalDateTime;
+import java.time.LocalDateTime; // Removed unused LocalDate import
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,9 +23,15 @@ public class LoanApplicationTest {
 
     @BeforeEach
     void setUp() {
-        // Create and persist a customer before each test - Using new constructor
+        // Create and persist a customer before each test - Using correct constructor
         testCustomer = new Customer(
-                null, "Test", "User", "test.user@example.com", LocalDate.of(1984, 4, 1)
+                null, // ID is generated
+                "Test User",
+                38,
+                new BigDecimal("90000.00"),
+                760,
+                "Employed",
+                new BigDecimal("12000.00")
         );
         testCustomer = entityManager.persistFlushFind(testCustomer); // Persist and get managed instance
         assertThat(testCustomer.getId()).isNotNull(); // Ensure customer was persisted
@@ -57,7 +62,7 @@ public class LoanApplicationTest {
         assertThat(savedApplication.getId()).isNotNull();
         assertThat(savedApplication.getCustomer()).isNotNull();
         assertThat(savedApplication.getCustomer().getId()).isEqualTo(testCustomer.getId());
-        assertThat(savedApplication.getCustomer().getFirstName()).isEqualTo("Test"); // Asserting new field
+        assertThat(savedApplication.getCustomer().getName()).isEqualTo("Test User"); // Asserting correct field
         assertThat(savedApplication.getLoanAmount()).isEqualByComparingTo(new BigDecimal("15000.00"));
         assertThat(savedApplication.getLoanPurpose()).isEqualTo("Home Improvement");
         assertThat(savedApplication.getRequestedTermMonths()).isEqualTo(36);
