@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import java.math.BigDecimal;
+import java.time.LocalDate; // Added import for LocalDate
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,28 +17,24 @@ public class CustomerTest {
 
     @Test
     void shouldPersistAndRetrieveCustomer() {
-        // Given
+        // Given - Using the new constructor (id, firstName, lastName, email, dateOfBirth)
         Customer customer = new Customer(
                 null, // ID is generated
-                "John Doe",
-                35,
-                new BigDecimal("60000.00"),
-                720,
-                "Employed",
-                new BigDecimal("5000.00")
+                "John",
+                "Doe",
+                "john.doe@example.com",
+                LocalDate.of(1989, 1, 15) // Example date
         );
 
         // When
         Customer savedCustomer = entityManager.persistFlushFind(customer); // Persist, flush, and find
 
-        // Then
+        // Then - Asserting the new fields
         assertThat(savedCustomer).isNotNull();
         assertThat(savedCustomer.getId()).isNotNull();
-        assertThat(savedCustomer.getName()).isEqualTo("John Doe");
-        assertThat(savedCustomer.getAge()).isEqualTo(35);
-        assertThat(savedCustomer.getAnnualIncome()).isEqualByComparingTo(new BigDecimal("60000.00"));
-        assertThat(savedCustomer.getCreditScore()).isEqualTo(720);
-        assertThat(savedCustomer.getEmploymentStatus()).isEqualTo("Employed");
-        assertThat(savedCustomer.getExistingDebt()).isEqualByComparingTo(new BigDecimal("5000.00"));
+        assertThat(savedCustomer.getFirstName()).isEqualTo("John");
+        assertThat(savedCustomer.getLastName()).isEqualTo("Doe");
+        assertThat(savedCustomer.getEmail()).isEqualTo("john.doe@example.com");
+        assertThat(savedCustomer.getDateOfBirth()).isEqualTo(LocalDate.of(1989, 1, 15));
     }
 }

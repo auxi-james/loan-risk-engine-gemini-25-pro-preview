@@ -8,23 +8,21 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
+import java.time.LocalDate; // Added import for LocalDate
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Data // Lombok will generate getters, setters, toString, equals, hashCode
+@NoArgsConstructor // Lombok generates no-args constructor
+@AllArgsConstructor // Lombok generates all-args constructor
 public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private Integer age;
-    private BigDecimal annualIncome; // Using BigDecimal for currency
-    private Integer creditScore;
-    private String employmentStatus;
-    private BigDecimal existingDebt; // Using BigDecimal for currency
+    private String firstName;
+    private String lastName;
+    private String email;
+    private LocalDate dateOfBirth; // Changed fields to match test
 
 }
