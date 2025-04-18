@@ -1,6 +1,7 @@
 package com.loanrisk.repository;
 
 import com.loanrisk.model.ScoringRule;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -19,6 +20,12 @@ public class ScoringRuleRepositoryTest {
 
     @Autowired
     private ScoringRuleRepository scoringRuleRepository;
+
+    @BeforeEach
+    public void cleanupDatabase() {
+        scoringRuleRepository.deleteAll();
+        entityManager.flush(); // Ensure deletes are executed before the next test
+    }
 
     @Test
     public void whenSaveRule_thenFindById() {
